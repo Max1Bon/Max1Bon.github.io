@@ -104,6 +104,19 @@ header>.row{flex-shrink:0}
 #shape-list,#connection-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px;margin:14px 0}
 .figure-choice{display:flex;align-items:center;gap:8px;font-size:.875rem}
 .figure-sample{font-size:1.4rem;color:#315ae7}
+#shape-controls{position:absolute;inset:0;z-index:3;pointer-events:none}
+#shape-controls button{position:absolute;display:grid;place-items:center;min-height:0;padding:0;pointer-events:auto;touch-action:none;transform:translate(-50%,-50%) scale(var(--control-scale,1))}
+.shape-plus{width:25px;height:25px;border-radius:50%;border:1px solid #6079db;background:#fff;color:#2748b6;font-size:18px;font-weight:650;line-height:1;box-shadow:0 2px 6px #243b8030}
+.shape-plus:hover{background:#e7eeff}
+.shape-resize{width:18px;height:18px;border:0;background:transparent;border-radius:4px}
+.shape-resize::before{content:'';width:9px;height:9px;border:1.5px solid #315ae7;border-radius:2px;background:white}
+.shape-resize:hover{background:#e7eeff}
+.shape-resize[data-corner=nw],.shape-resize[data-corner=se]{cursor:nwse-resize}
+.shape-resize[data-corner=ne],.shape-resize[data-corner=sw]{cursor:nesw-resize}
+.obj.shape-draft{pointer-events:none;opacity:.75;z-index:2}
+.shape-label{max-width:100%;max-height:100%;overflow:hidden}
+.obj .shape-text{display:block;width:100%;height:100%;min-height:0;border:0;outline:0;padding:0;resize:none;background:transparent;color:inherit;font:inherit;text-align:center;user-select:text;cursor:text}
+.obj.shape.editing{display:block;cursor:text}
 #shape-size{display:flex;gap:12px}
 #shape-size label{margin:6px 0}
 #shape-size input{width:75px;padding:6px}
@@ -154,7 +167,7 @@ header>.row{flex-shrink:0}
  <label for="current-name">Название доски</label><input id="current-name" maxlength="80" required>
  <div class="row"><button class="primary">Сохранить</button><button type="button" id="cancel-current-name">Отмена</button></div>
  <p id="current-name-error" role="status"></p></form></dialog>
-<div id="surface" hidden><div id="extent"><div id="world"><svg id="drawing" width="5000" height="4000" aria-label="Рисунки и связи"><defs><marker id="arrowhead" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9 Z"/></marker></defs></svg><div id="objects"></div><div id="selection-box" hidden></div></div></div></div>
+<div id="surface" hidden><div id="extent"><div id="world"><svg id="drawing" width="5000" height="4000" aria-label="Рисунки и связи"><defs><marker id="arrowhead" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9 Z"/></marker></defs></svg><div id="objects"></div><div id="selection-box" hidden></div><div id="shape-controls" hidden></div></div></div></div>
 <nav id="tools" aria-label="Инструменты доски" hidden>
 <div class="tool-group"><button type="button" data-mode="select" aria-pressed="true" class="tool-button tone-violet active" title="Выбор" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 1-3 6z"/><path d="m12 14 4 5"/></svg></span><span class="tool-label">Выбор</span></button><button type="button" data-mode="hand" aria-pressed="false" class="tool-button tone-cyan" title="Рука" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v5a7 7 0 0 1-7 7c-3 0-4-1-6-3l-3-4a1.5 1.5 0 0 1 2-2z"/></svg></span><span class="tool-label">Рука</span></button><button type="button" data-mode="note" aria-pressed="false" class="tool-button tone-amber" title="Заметка" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 0 1 2 2v9l-7 7H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5M7 8h10M7 12h5"/></svg></span><span class="tool-label">Заметка</span></button><button type="button" data-mode="text" aria-pressed="false" class="tool-button tone-violet" title="Текст" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M12 4v16m-4 0h8"/></svg></span><span class="tool-label">Текст</span></button><button type="button" id="emoji" class="tool-button tone-amber" title="Эмодзи"><span class="tool-icon" aria-hidden="true">😊</span><span class="tool-label">Эмодзи</span></button><button type="button" id="image" class="tool-button tone-green" title="Картинка" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 4-4 3 3 4-5 5 6"/></svg></span><span class="tool-label">Картинка</span></button></div>
 <div class="tool-group"><button type="button" data-mode="pencil" aria-pressed="false" class="tool-button tone-amber" title="Карандаш" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 1-5L16 4a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3L9 19zM14 6l4 4M5 15l4 4"/></svg></span><span class="tool-label">Карандаш</span></button><button type="button" data-mode="pen" aria-pressed="false" class="tool-button tone-blue" title="Перо" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 19 2-8 7-7 6 6-7 7zM5 19l5-5m4-10 2-2 6 6-2 2"/><circle cx="11" cy="13" r="1"/></svg></span><span class="tool-label">Перо</span></button><button type="button" data-mode="eraser" aria-pressed="false" class="tool-button tone-pink" title="Ластик" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 8-8a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-5a2 2 0 0 1 0-3zM8 8l8 8m-4 4h9"/></svg></span><span class="tool-label">Ластик</span></button><button type="button" id="color" class="tool-button tone-pink" title="Цвет" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-3.7 1 1 0 0 1 .6-1.8H18a3 3 0 0 0 3-3 9 9 0 0 0-9-9.5Z"/><path d="M7 10h.01M11 7h.01M15 8h.01M7 14h.01" stroke-width="3"/></svg></span><span class="tool-label">Цвет</span></button></div>
@@ -163,7 +176,7 @@ header>.row{flex-shrink:0}
 <input id="image-file" type="file" accept="image/*" hidden></nav>
 <section id="stroke-controls" aria-label="Толщина линии" hidden><label for="stroke-width">Толщина</label><input type="range" id="stroke-width" min="1" max="24" step="0.5" value="2"><output id="width-value" for="stroke-width">2</output><button type="button" id="stroke-color" aria-label="Палитра инструмента" title="Палитра инструмента"><span class="swatch-dot" aria-hidden="true"></span><span>Цвет</span></button></section>
 <dialog id="palette-dialog"><h2 id="palette-heading">Палитра</h2><div id="ink-swatches" role="group" aria-label="Готовые цвета"></div><div class="row"><label for="custom-ink">Свой цвет</label><input type="color" id="custom-ink"><button type="button" id="use-custom-ink">Применить</button><button type="button" id="close-palette">Отмена</button></div></dialog>
-<dialog id="shapes-dialog"><h2>Фигуры</h2><div id="shape-list"></div><button type="button" id="close-shapes">Закрыть</button></dialog>
+<dialog id="shapes-dialog" aria-labelledby="shapes-title"><h2 id="shapes-title">Фигуры</h2><button type="button" id="repeat-shape" class="primary" hidden>Такой же блок</button><div id="shape-list"></div><button type="button" id="close-shapes">Закрыть</button></dialog>
 <dialog id="diagram-dialog"><h2>Линии и схемы</h2>
  <div id="connection-options"></div><label><input type="checkbox" id="use-arrow" checked> Стрелка на конце</label>
  <div class="row"><button type="button" id="mind-root">Центр карты</button><button type="button" id="mind-branch">Добавить ветвь</button><button type="button" id="close-diagram">Закрыть</button></div>
@@ -247,6 +260,7 @@ function setMode(m){
  $('stroke-controls').hidden=!drawing;
  if(drawing){lastInkTool=m;showInkColor();$('stroke-width').value=strokeWidths[m];$('width-value').value=strokeWidths[m];}
  if(m!=='connector')cancelConnection();
+ updateShapeControls();
  $('surface').style.cursor=m==='hand'?'grab':drawing||['eraser','shape','connector'].includes(m)?'crosshair':'default';
 }
 $('stroke-width').oninput=event=>{
@@ -261,12 +275,14 @@ function pick(ids=[]){
  for(const id of selected)nodes.get(id)?.classList.add('selected');
  $('edit').disabled=selected.size!==1||!editable([...selected][0]);
  $('del').disabled=!selected.size;
+ updateShapeControls();
 }
 function renderObject(o){
  const {id,data:d,deleted}=o;
  let el=nodes.get(id);
  if(deleted){
   el?.remove();nodes.delete(id);
+  if(shapeEdit?.id===id)finishShapeEdit(false);
   if(selected.has(id))pick([...selected]);
   return;
  }
@@ -299,15 +315,20 @@ function renderObject(o){
    if(!img){img=document.createElement('img');img.alt='Изображение на доске';img.draggable=false;el.append(img);}
    if(img.getAttribute('src')!==d.src)img.src=d.src;
    el.style.width=d.width+'px';
+  }else if(d.type==='shape'){
+   el.classList.toggle('editing',shapeEdit?.id===id);
+   if(shapeEdit?.id!==id){
+    let label=el.firstElementChild;
+    if(!label){label=document.createElement('span');label.className='shape-label';el.append(label);}
+    if(label.textContent!==d.text)label.textContent=d.text;
+   }
+   styleShape(el,d);
   }else if(el.textContent!==d.text)el.textContent=d.text;
-  if(d.type==='shape'){
-   el.style.width=d.width+'px';el.style.height=d.height+'px';
-   if(d.form==='triangle')el.style.padding='0 '+Math.round(d.width*.2)+'px '+Math.round(d.height*.04)+'px';
-  }
   const label={shape:'Фигура. '+d.text,image:'Изображение',note:'Заметка. '+d.text,text:'Текст. '+d.text,emoji:'Эмодзи. '+d.text};
   el.setAttribute('aria-label',label[d.type]);
  }
  el.classList.toggle('selected',selected.has(id));
+ if(d.type==='shape'&&selected.has(id))updateShapeControls();
 }
 async function refresh(){
  if(!board||polling)return;
@@ -348,11 +369,12 @@ async function put(o,{remember=true,previous=objects.get(o.id)}={}){
   if(!busy.size&&$('status').textContent==='Сохраняем…')savedStatus();
  }
 }
-async function commitGroup(changes){
+async function commitGroup(changes,{stopOnFailure=false}={}){
  const entries=[];
  for(const next of changes){
   const previous=objects.get(next.id);
   if(await put(next,{remember:false,previous}))entries.push({id:next.id,previous,next:objects.get(next.id),version:next.version+1});
+  else if(stopOnFailure)break;
  }
  rememberAction(entries);
  return entries.map(entry=>entry.id);
@@ -423,6 +445,7 @@ function changeZoom(next,event){
  surface.scrollLeft=worldX*zoom-x;
  surface.scrollTop=worldY*zoom-y;
  $('zoom-reset').textContent=Math.round(zoom*100)+'%';
+ updateShapeControls();
 }
 $('zoom-out').onclick=()=>changeZoom(zoom/1.25);
 $('zoom-in').onclick=()=>changeZoom(zoom*1.25);
@@ -668,19 +691,163 @@ const figures=[
 ];
 const routes=[['curve','Плавная линия','∿'],['straight','Прямая линия','╱'],['elbow','Угловая линия','┐']];
 let shapeForm='rectangle',connectionRoute='curve',connectionStart=null,connectionPreview=null,pendingBranch=null;
+let neighborFrom=null,shapeEdit=null;
+const shapeControls=$('shape-controls');
+const sides=[
+ ['left','слева',-1,0],['right','справа',1,0],['top','сверху',0,-1],['bottom','снизу',0,1]
+];
+const corners=[
+ ['nw','верхний левый',-1,-1],['ne','верхний правый',1,-1],
+ ['sw','нижний левый',-1,1],['se','нижний правый',1,1]
+];
+function shapeControl(className,label){
+ const button=document.createElement('button');
+ button.type='button';button.className=className;button.title=label;button.setAttribute('aria-label',label);
+ shapeControls.append(button);
+ return button;
+}
+for(const [side,label,dx,dy] of sides){
+ const button=shapeControl('shape-plus','Добавить фигуру '+label);
+ button.dataset.side=side;button.textContent='+';
+ button.onpointerdown=event=>{
+  if(event.button!==0||drag)return;
+  const id=[...selected][0],bounds=anchorBounds(id);
+  if(!bounds)return;
+  drag={link:{id,point:middle(bounds)},pointer:event.pointerId,start:pos(event)};
+  button.setPointerCapture(event.pointerId);
+ };
+ button.onclick=()=>{if(!drag)showShapes({id:[...selected][0],dx,dy});};
+}
+for(const [corner,label,dx,dy] of corners){
+ const button=shapeControl('shape-resize','Изменить размер · '+label+' угол');
+ button.dataset.corner=corner;
+ button.onpointerdown=event=>{
+  if(event.button!==0||drag)return;
+  const id=[...selected][0],o=objects.get(id);
+  if(!o||busy.has(id))return;
+  event.preventDefault();
+  drag={resize:[dx,dy],pointer:event.pointerId,start:pos(event),originals:new Map([[id,o]])};
+  surface.setPointerCapture(event.pointerId);
+ };
+ button.onkeydown=event=>{
+  const delta={ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,-10],ArrowDown:[0,10]}[event.key];
+  if(!delta||event.ctrlKey||event.metaKey)return;
+  const o=objects.get([...selected][0]);
+  if(o){event.preventDefault();put(resizedShape(o,[dx,dy],...delta));}
+ };
+}
+function updateShapeControls(){
+ const id=selected.size===1?[...selected][0]:null;
+ const bounds=mode==='select'&&!shapeEdit&&objects.get(id)?.data.type==='shape'&&anchorBounds(id);
+ shapeControls.hidden=!bounds;
+ if(!bounds)return;
+ const [x,y]=middle(bounds), gap=24/zoom;
+ shapeControls.style.setProperty('--control-scale',1/zoom);
+ for(const [side,,dx,dy] of sides){
+  const button=shapeControls.querySelector('[data-side='+side+']');
+  placeControl(button,x+dx*(bounds.w/2+gap),y+dy*(bounds.h/2+gap));
+ }
+ for(const [corner,,dx,dy] of corners){
+  const button=shapeControls.querySelector('[data-corner='+corner+']');
+  placeControl(button,x+dx*bounds.w/2,y+dy*bounds.h/2);
+ }
+}
+function placeControl(button,x,y){
+ button.style.left=x+'px';button.style.top=y+'px';
+}
+function styleShape(el,d){
+ el.style.width=d.width+'px';el.style.height=d.height+'px';
+ if(d.form==='triangle')el.style.padding='0 '+Math.round(d.width*.25)+'px '+Math.round(d.height*.06)+'px';
+ if(d.form==='diamond')el.style.padding='0 '+Math.round(d.width*.26)+'px';
+}
+function clampSize(n){return Math.min(900,Math.max(60,Math.round(n)));}
+function shapeRect(start,end){
+ const [x,y]=start,[u,v]=end,w=clampSize(Math.abs(u-x)),h=clampSize(Math.abs(v-y));
+ return {x:u<x?x-w:x,y:v<y?y-h:y,width:w,height:h};
+}
+function resizedShape(o,[horizontal,vertical],dx,dy){
+ const d=o.data,width=clampSize(d.width+horizontal*dx),height=clampSize(d.height+vertical*dy);
+ return {...o,data:{...d,width,height,x:d.x+(horizontal<0?d.width-width:0),y:d.y+(vertical<0?d.height-height:0)}};
+}
+function editShape(o){
+ if(shapeEdit?.id===o.id||busy.has(o.id))return;
+ finishShapeEdit();
+ const el=nodes.get(o.id),textarea=document.createElement('textarea');
+ textarea.className='shape-text';textarea.setAttribute('aria-label','Текст фигуры');
+ textarea.maxLength=5000;textarea.value=o.data.text;
+ textarea.addEventListener('blur',()=>{if(shapeEdit?.input===textarea)finishShapeEdit();});
+ textarea.addEventListener('keydown',event=>{
+  if(event.key==='Escape'||(event.key==='Enter'&&(event.ctrlKey||event.metaKey))){
+   event.preventDefault();event.stopPropagation();
+   finishShapeEdit(event.key!=='Escape');
+   el.focus();
+  }
+ });
+ pick([o.id]);
+ shapeEdit={id:o.id,input:textarea,initialText:o.data.text};
+ el.replaceChildren(textarea);renderObject(o);
+ textarea.focus();textarea.setSelectionRange(textarea.value.length,textarea.value.length);
+}
+function finishShapeEdit(save=true){
+ if(!shapeEdit)return;
+ const {id,input,initialText}=shapeEdit,o=objects.get(id),text=input.value;
+ shapeEdit=null;input.remove();
+ if(o&&!o.deleted){
+  renderObject(o);
+  if(save&&text!==initialText&&text!==o.data.text)put({...o,data:{...o.data,text}});
+ }
+}
+function editObject(o){
+ if(!o)return;
+ if(o.data.type==='shape')editShape(o);
+ else openEdit(o);
+}
+function showShapes(from=null){
+ neighborFrom=from;
+ $('shapes-title').textContent=from?'Фигура для новой ветки':'Фигуры';
+ $('repeat-shape').hidden=!from;
+ $('shapes-dialog').showModal();
+}
+async function addNeighbor(from,form){
+ const parent=anchorBounds(from.id),source=objects.get(from.id);
+ if(!parent||source.data.type!=='shape')return;
+ const [cx,cy]=middle(parent);
+ const {dx,dy}=from;
+ const node=shapeObject(form??source.data.form,[0,0],'',form?undefined:source.data.color,
+  form?undefined:source.data.width,form?undefined:source.data.height);
+ const d=node.data;
+ const x=cx-d.width/2+dx*((d.width+parent.w)/2+72);
+ const y=cy-d.height/2+dy*((d.height+parent.h)/2+72);
+ d.x=Math.max(0,Math.min(5000-d.width,x));d.y=Math.max(0,Math.min(4000-d.height,y));
+ if((dx<0&&d.x+d.width>=parent.x)||(dx>0&&d.x<=parent.x+parent.w)||
+    (dy<0&&d.y+d.height>=parent.y)||(dy>0&&d.y<=parent.y+parent.h)){
+  notice('Сдвинь фигуру от края доски, чтобы здесь поместилась ветка.');return;
+ }
+ const edge=connectionObject({point:[cx,cy],id:from.id},{
+  point:[d.x+d.width/2,d.y+d.height/2],id:node.id
+ },'curve',true);
+ const ids=await commitGroup([node,edge],{stopOnFailure:true});
+ if(ids.includes(node.id)){pick([node.id]);nodes.get(node.id)?.focus({preventScroll:true});}
+}
 function choice(label,symbol,action){
  const button=document.createElement('button');button.type='button';button.className='figure-choice';
  const sample=document.createElement('span');sample.className='figure-sample';sample.setAttribute('aria-hidden','true');sample.textContent=symbol;
  button.append(sample,document.createTextNode(label));button.onclick=action;return button;
 }
-for(const [form,label,symbol] of figures)$('shape-list').append(choice(label,symbol,()=>{
- shapeForm=form;$('shapes-dialog').close();setMode('shape');setDiagramHelp('Щёлкни по доске, чтобы поставить фигуру.');
-}));
+function chooseShape(form){
+ const from=neighborFrom;
+ $('shapes-dialog').close();neighborFrom=null;
+ if(from){addNeighbor(from,form);return;}
+ shapeForm=form;setMode('shape');
+ setDiagramHelp('Зажми и протяни мышь, чтобы задать размер. Щелчок добавит фигуру обычного размера.');
+}
+for(const [form,label,symbol] of figures)$('shape-list').append(choice(label,symbol,()=>chooseShape(form)));
+$('repeat-shape').onclick=()=>chooseShape();
 for(const [route,label,symbol] of routes)$('connection-options').append(choice(label,symbol,()=>{
  connectionRoute=route;$('diagram-dialog').close();cancelConnection();setMode('connector');
  setDiagramHelp('Щёлкни по первому блоку или точке.');
 }));
-$('shapes').onclick=()=>$('shapes-dialog').showModal();
+$('shapes').onclick=()=>showShapes();
 $('close-shapes').onclick=()=>$('shapes-dialog').close();
 $('diagram').onclick=()=>{
  const parent=selected.size===1&&anchorBounds([...selected][0]);
@@ -774,11 +941,16 @@ function objectsIn(box){
  }).map(([id])=>id);
 }
 surface.addEventListener('pointerdown',ev=>{
- if(ev.button!==0||drag)return;
+ if(ev.button!==0||drag||ev.target.closest('#shape-controls')||typing(ev.target))return;
+ finishShapeEdit();
  const [x,y]=pos(ev),id=ev.target.closest('[data-id]')?.dataset.id;
  if(mode==='connector'){connectionClick([x,y],id);return;}
- if(mode==='shape'){setMode('select');openEdit(shapeObject(shapeForm,[x,y],''));return;}
- if(mode==='hand'){
+ if(mode==='shape'){
+  const o=shapeObject(shapeForm,[x,y],''),preview=document.createElement('div');
+  preview.className='obj shape shape-draft '+o.data.color+' form-'+shapeForm;
+  preview.hidden=true;$('world').append(preview);
+  drag={shape:o,preview,start:[x,y]};
+ }else if(mode==='hand'){
   drag={pan:true,sx:ev.clientX,sy:ev.clientY,left:surface.scrollLeft,top:surface.scrollTop};
  }else if(mode==='eraser'){
   drag={eraser:true};eraseStroke(ev.target);
@@ -846,13 +1018,48 @@ surface.addEventListener('pointermove',ev=>{
  if(Math.hypot(dx,dy)*zoom<4&&!drag.moved)return;
  drag.moved=true;
  if(drag.selection){coverRectangle(drag.start,lastPoint);return;}
- for(const o of drag.originals.values())renderObject(movingObject(o,dx,dy));
+ if(drag.link){
+  if(!drag.preview){
+   drag.preview=document.createElementNS('http://www.w3.org/2000/svg','path');
+   drag.preview.classList.add('connector','connection-preview');
+   drag.preview.setAttribute('marker-end','url(#arrowhead)');
+   $('drawing').append(drag.preview);
+   surface.setPointerCapture(ev.pointerId);
+  }
+  const [x,y]=drag.link.point;
+  const data={x,y,points:[[0,0],[lastPoint[0]-x,lastPoint[1]-y]],from:drag.link.id,to:null,route:'curve'};
+  drag.preview.setAttribute('d',connectionPath(data));
+  return;
+ }
+ if(drag.shape){
+  const rect=shapeRect(drag.start,lastPoint);
+  drag.preview.hidden=false;placeControl(drag.preview,rect.x,rect.y);styleShape(drag.preview,{...drag.shape.data,...rect});
+  return;
+ }
+ for(const o of drag.originals.values())renderObject(drag.resize?resizedShape(o,drag.resize,dx,dy):movingObject(o,dx,dy));
  renderConnections();
 });
 async function release(event,cancel=false){
  if(!drag||drag.pointer!==event.pointerId)return;
  const d=drag;drag=null;
  if(d.pan||d.eraser)return;
+ if(d.link){
+  d.preview?.remove();
+  if(cancel||!d.moved)return;
+  const id=document.elementFromPoint(event.clientX,event.clientY)?.closest('.obj.shape')?.dataset.id;
+  const bounds=anchorBounds(id);
+  if(bounds&&id!==d.link.id)await put(connectionObject(d.link,{id,point:middle(bounds)},'curve',true));
+  return;
+ }
+ if(d.shape){
+  d.preview.remove();
+  if(cancel)return;
+  const end=pos(event),[x,y]=d.start;
+  if(d.moved||Math.hypot(end[0]-x,end[1]-y)*zoom>=4)Object.assign(d.shape.data,shapeRect(d.start,end));
+  setMode('select');
+  if(await put(d.shape)){pick([d.shape.id]);nodes.get(d.shape.id)?.focus({preventScroll:true});}
+  return;
+ }
  if(d.selection){
   if(d.moved&&!cancel)pick([...d.initial,...objectsIn($('selection-box').getBoundingClientRect())]);
   $('selection-box').hidden=true;return;
@@ -872,21 +1079,21 @@ async function release(event,cancel=false){
  if(!d.moved)return;
  const [x,y]=pos(event),dx=x-d.start[0],dy=y-d.start[1];
  if(cancel){for(const o of d.originals.values())renderObject(o);renderConnections();return;}
- await commitGroup([...d.originals.values()].map(o=>movingObject(o,dx,dy)));
+ await commitGroup([...d.originals.values()].map(o=>d.resize?resizedShape(o,d.resize,dx,dy):movingObject(o,dx,dy)));
 }
 surface.addEventListener('pointerup',release);
 surface.addEventListener('pointercancel',event=>release(event,true));
 surface.addEventListener('dblclick',ev=>{
  const id=ev.target.closest('[data-id]')?.dataset.id;
- if(mode==='select'&&editable(id))openEdit(objects.get(id));
+ if(mode==='select'&&editable(id)&&!typing(ev.target))editObject(objects.get(id));
 });
 $('objects').addEventListener('keydown',ev=>{
  const o=objects.get(ev.target.dataset.id);if(!o)return;
- if(ev.key==='Enter'&&editable(o.id)){pick([o.id]);openEdit(o);return;}
+ if(ev.key==='Enter'&&editable(o.id)){ev.preventDefault();setMode('select');pick([o.id]);editObject(o);return;}
  const move={ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,-10],ArrowDown:[0,10]}[ev.key];
  if(move&&!ev.ctrlKey&&!ev.metaKey){ev.preventDefault();put(movingObject(o,...move));}
 });
-$('edit').onclick=()=>{if(selected.size===1)openEdit(objects.get([...selected][0]));};
+$('edit').onclick=()=>{if(selected.size===1){setMode('select');editObject(objects.get([...selected][0]));}};
 $('del').onclick=removeSelected;
 $('editform').onsubmit=async ev=>{
  ev.preventDefault();
@@ -901,7 +1108,7 @@ $('editform').onsubmit=async ev=>{
   const edge=connectionObject({point:middle(parent),id:pendingBranch},{
    point:[savedDraft.data.x+savedDraft.data.width/2,savedDraft.data.y+savedDraft.data.height/2],id:savedDraft.id
   },'curve',true);
-  const ids=await commitGroup([savedDraft,edge]);ok=ids.includes(savedDraft.id);
+  const ids=await commitGroup([savedDraft,edge],{stopOnFailure:true});ok=ids.includes(savedDraft.id);
  }else ok=await put(savedDraft);
  submit.disabled=false;
  if(ok){$('editor').close();setMode('select');pick([savedDraft.id]);pendingBranch=null;}
