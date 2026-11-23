@@ -6,7 +6,7 @@
 .obj.image img{display:block;width:100%;height:auto;border-radius:inherit;pointer-events:none}
 .zoom{display:flex;gap:2px}
 .zoom button{min-width:44px}
-#preview{pointer-events:none}
+#preview{pointer-events:none!important}
 #dashboard{width:min(920px,calc(100% - 36px));margin:48px auto}
 #dashboard h2{font-size:2rem}
 #dashboard input,#key-value,#rename-title{min-height:44px;padding:8px 10px;border:1px solid #aebbd0;border-radius:9px;max-width:100%;margin-right:6px}
@@ -92,6 +92,39 @@ header>.row{flex-shrink:0}
 #surface[data-pattern=plain]{background-image:none}
 #surface[data-theme=dark] #drawing path[stroke="#25364b"]{stroke:#d7e2f4}
 @media(max-width:680px){#rename-current{padding:4px;max-width:36vw}header:has(#board-heading:not([hidden])) #new{display:none}}
+#stroke-color{display:flex;align-items:center;gap:6px;padding:4px 8px;min-height:38px}
+.swatch-dot{display:inline-block;width:17px;height:17px;border-radius:50%;background:var(--swatch,#25364b);border:1px solid #a7b4c6}
+#ink-swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(32px,1fr));gap:5px;margin:16px 0 4px}
+.ink-swatch{min-height:34px;padding:0;background:var(--swatch);border:1px solid #a7b4c6}
+.ink-swatch:hover{background:var(--swatch);box-shadow:0 0 0 2px #315ae7}
+.ink-swatch[aria-pressed=true]{box-shadow:0 0 0 2px #3557ca}
+#custom-ink{width:48px;min-height:42px;padding:2px}
+#palette-dialog .row{align-items:center}
+#palette-dialog .row label{margin:0}
+#shape-list,#connection-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px;margin:14px 0}
+.figure-choice{display:flex;align-items:center;gap:8px;font-size:.875rem}
+.figure-sample{font-size:1.4rem;color:#315ae7}
+#shape-size{display:flex;gap:12px}
+#shape-size label{margin:6px 0}
+#shape-size input{width:75px;padding:6px}
+.obj.shape{display:grid;place-items:center;padding:12px;text-align:center;font-weight:650;border:2px solid #697dac;border-radius:3px}
+.obj.form-round{border-radius:18px}.obj.form-ellipse,.obj.form-mind{border-radius:50%}
+.obj.form-mind{box-shadow:0 4px 14px #1f3e681b}
+.obj.form-diamond,.obj.form-triangle{isolation:isolate;background:transparent;border:0}
+.obj.form-diamond::before,.obj.form-triangle::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--shape-fill,#d3e9ff)}
+.obj.form-diamond::before{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.obj.form-triangle::before{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.obj.form-triangle{align-items:end}
+.obj.shape.yellow{--shape-fill:#fff1a8}.obj.shape.pink{--shape-fill:#ffd7e4}.obj.shape.blue{--shape-fill:#d3e9ff}.obj.shape.green{--shape-fill:#d8f1ce}.obj.shape.ink{--shape-fill:#edf0f6}
+#drawing path.ink-outline{fill:var(--ink-color);stroke:none;pointer-events:visibleFill}
+#drawing path.ink-outline.pencil{opacity:.84}
+#drawing marker path{fill:context-stroke;stroke:none;pointer-events:none}
+#drawing path.connector{stroke:#6277a8;stroke-width:2.5}
+#surface[data-theme=dark] #drawing path.connector{stroke:#aebfee}
+#drawing path.connection-preview{stroke-dasharray:6 5;pointer-events:none}
+#diagram-help{position:fixed;z-index:5;left:50%;top:82px;transform:translateX(-50%);background:#fcfdff;padding:8px 12px;border:1px solid #d9e3ef;border-radius:10px;max-width:90vw}
+@media(max-width:680px){#stroke-controls{flex-wrap:wrap;max-width:calc(100% - 150px)}#stroke-color span:last-child{display:none}}
+
 </style>
 <header><div><h1 id="welcome-title">▧ Общая доска</h1><h1 id="board-heading" hidden><button type="button" id="rename-current" aria-label="Переименовать доску" title="Переименовать доску"><span id="current-title">Общая доска</span><span aria-hidden="true">✎</span></button></h1><small id="welcome-caption">Место для совместных идей</small></div><span id="status" role="status"></span><div class="row" style="margin:0"><button id="board-background" hidden>Фон</button><button id="share" hidden>Пригласить</button><button id="dashboard-link">Мои доски</button><button id="new">Новая доска</button></div></header>
 <section id="welcome"><small>РАБОТАЕМ ВМЕСТЕ</small><h2>Одна доска.<br>Много хороших идей.</h2><p>Добавляйте стикеры, пишите и рисуйте вместе. Вернитесь по той же ссылке, чтобы продолжить работу.</p><button id="start" class="primary">Создать доску</button><div class="demo" aria-hidden="true"><div class="yellow">Что мы уже знаем?<br><br>Собираем идеи</div><div class="blue">Что попробуем?<br><br>Планируем вместе</div><div class="pink">Наш результат<br><br>Делимся находками</div></div><div id="recent"></div></section>
@@ -121,16 +154,25 @@ header>.row{flex-shrink:0}
  <label for="current-name">Название доски</label><input id="current-name" maxlength="80" required>
  <div class="row"><button class="primary">Сохранить</button><button type="button" id="cancel-current-name">Отмена</button></div>
  <p id="current-name-error" role="status"></p></form></dialog>
-<div id="surface" hidden><div id="extent"><div id="world"><svg id="drawing" width="5000" height="4000" aria-label="Рисунки"></svg><div id="objects"></div><div id="selection-box" hidden></div></div></div></div>
+<div id="surface" hidden><div id="extent"><div id="world"><svg id="drawing" width="5000" height="4000" aria-label="Рисунки и связи"><defs><marker id="arrowhead" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9 Z"/></marker></defs></svg><div id="objects"></div><div id="selection-box" hidden></div></div></div></div>
 <nav id="tools" aria-label="Инструменты доски" hidden>
 <div class="tool-group"><button type="button" data-mode="select" aria-pressed="true" class="tool-button tone-violet active" title="Выбор" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 1-3 6z"/><path d="m12 14 4 5"/></svg></span><span class="tool-label">Выбор</span></button><button type="button" data-mode="hand" aria-pressed="false" class="tool-button tone-cyan" title="Рука" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v5a7 7 0 0 1-7 7c-3 0-4-1-6-3l-3-4a1.5 1.5 0 0 1 2-2z"/></svg></span><span class="tool-label">Рука</span></button><button type="button" data-mode="note" aria-pressed="false" class="tool-button tone-amber" title="Заметка" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 0 1 2 2v9l-7 7H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5M7 8h10M7 12h5"/></svg></span><span class="tool-label">Заметка</span></button><button type="button" data-mode="text" aria-pressed="false" class="tool-button tone-violet" title="Текст" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M12 4v16m-4 0h8"/></svg></span><span class="tool-label">Текст</span></button><button type="button" id="emoji" class="tool-button tone-amber" title="Эмодзи"><span class="tool-icon" aria-hidden="true">😊</span><span class="tool-label">Эмодзи</span></button><button type="button" id="image" class="tool-button tone-green" title="Картинка" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 4-4 3 3 4-5 5 6"/></svg></span><span class="tool-label">Картинка</span></button></div>
 <div class="tool-group"><button type="button" data-mode="pencil" aria-pressed="false" class="tool-button tone-amber" title="Карандаш" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 1-5L16 4a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3L9 19zM14 6l4 4M5 15l4 4"/></svg></span><span class="tool-label">Карандаш</span></button><button type="button" data-mode="pen" aria-pressed="false" class="tool-button tone-blue" title="Перо" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 19 2-8 7-7 6 6-7 7zM5 19l5-5m4-10 2-2 6 6-2 2"/><circle cx="11" cy="13" r="1"/></svg></span><span class="tool-label">Перо</span></button><button type="button" data-mode="eraser" aria-pressed="false" class="tool-button tone-pink" title="Ластик" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 8-8a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-5a2 2 0 0 1 0-3zM8 8l8 8m-4 4h9"/></svg></span><span class="tool-label">Ластик</span></button><button type="button" id="color" class="tool-button tone-pink" title="Цвет" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-3.7 1 1 0 0 1 .6-1.8H18a3 3 0 0 0 3-3 9 9 0 0 0-9-9.5Z"/><path d="M7 10h.01M11 7h.01M15 8h.01M7 14h.01" stroke-width="3"/></svg></span><span class="tool-label">Цвет</span></button></div>
 <div class="tool-group"><button type="button" id="edit" class="tool-button tone-blue" title="Изменить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7m-12 4 1-4L17 4a2 2 0 0 1 3 3l-8 8z"/></svg></span><span class="tool-label">Изменить</span></button><button type="button" id="del" class="tool-button tone-pink" title="Удалить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V3h6v3M6 6l1 14h10l1-14m-8 4v6m4-6v6"/></svg></span><span class="tool-label">Удалить</span></button><button type="button" id="undo" class="tool-button tone-blue" title="Отменить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 5-5 5 5 5m-5-5h10a6 6 0 0 1 6 6v2"/></svg></span><span class="tool-label">Отменить</span></button><button type="button" id="export" class="tool-button tone-green" title="Скачать копию" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></span><span class="tool-label">Скачать копию</span></button></div>
+<div class="tool-group"><button type="button" id="shapes" class="tool-button tone-violet" title="Фигуры"><span class="tool-icon" aria-hidden="true">◇</span><span class="tool-label">Фигуры</span></button><button type="button" id="diagram" class="tool-button tone-cyan" title="Схемы"><span class="tool-icon" aria-hidden="true">⑂</span><span class="tool-label">Схемы</span></button></div>
 <input id="image-file" type="file" accept="image/*" hidden></nav>
-<section id="stroke-controls" aria-label="Толщина линии" hidden><label for="stroke-width">Толщина</label><input type="range" id="stroke-width" min="1" max="24" step="0.5" value="2"><output id="width-value" for="stroke-width">2</output></section>
+<section id="stroke-controls" aria-label="Толщина линии" hidden><label for="stroke-width">Толщина</label><input type="range" id="stroke-width" min="1" max="24" step="0.5" value="2"><output id="width-value" for="stroke-width">2</output><button type="button" id="stroke-color" aria-label="Палитра инструмента" title="Палитра инструмента"><span class="swatch-dot" aria-hidden="true"></span><span>Цвет</span></button></section>
+<dialog id="palette-dialog"><h2 id="palette-heading">Палитра</h2><div id="ink-swatches" role="group" aria-label="Готовые цвета"></div><div class="row"><label for="custom-ink">Свой цвет</label><input type="color" id="custom-ink"><button type="button" id="use-custom-ink">Применить</button><button type="button" id="close-palette">Отмена</button></div></dialog>
+<dialog id="shapes-dialog"><h2>Фигуры</h2><div id="shape-list"></div><button type="button" id="close-shapes">Закрыть</button></dialog>
+<dialog id="diagram-dialog"><h2>Линии и схемы</h2>
+ <div id="connection-options"></div><label><input type="checkbox" id="use-arrow" checked> Стрелка на конце</label>
+ <div class="row"><button type="button" id="mind-root">Центр карты</button><button type="button" id="mind-branch">Добавить ветвь</button><button type="button" id="close-diagram">Закрыть</button></div>
+ <p id="mind-hint">Чтобы добавить ветвь, выдели один блок на доске.</p>
+</dialog>
+<div id="diagram-help" role="status" hidden></div>
 <dialog id="emoji-dialog"><h2>Стикеры и эмодзи</h2><div id="emoji-list"></div><button type="button" id="close-emoji">Закрыть</button></dialog>
 <div class="zoom" id="zoom-controls" aria-label="Масштаб доски" hidden><button id="zoom-out" aria-label="Уменьшить масштаб" title="Уменьшить масштаб">−</button><button id="zoom-reset" aria-label="Сбросить масштаб" title="Сбросить масштаб">100%</button><button id="zoom-in" aria-label="Увеличить масштаб" title="Увеличить масштаб">+</button></div>
-<dialog id="editor"><form id="editform"><h2 id="editor-title">Стикер</h2><label>Текст<textarea id="text" maxlength="5000" required></textarea></label><label>Цвет</label><div class="row" id="colors"></div><div class="row"><button class="primary">Сохранить</button><button type="button" id="cancel">Отмена</button></div><p id="error" role="status"></p></form></dialog>
+<dialog id="editor"><form id="editform"><h2 id="editor-title">Стикер</h2><label>Текст<textarea id="text" maxlength="5000" required></textarea></label><section id="shape-size" hidden><label>Ширина <input id="shape-width" type="number" min="60" max="900" step="1"></label><label>Высота <input id="shape-height" type="number" min="60" max="900" step="1"></label></section><label>Цвет</label><div class="row" id="colors"></div><div class="row"><button class="primary">Сохранить</button><button type="button" id="cancel">Отмена</button></div><p id="error" role="status"></p></form></dialog>
 <dialog id="invite"><h2>Пригласить на доску</h2><p>Любой, у кого есть ссылка, сможет редактировать эту доску.</p><input id="shareurl" readonly aria-label="Ссылка на доску"><div class="row"><button id="copy">Скопировать</button><button id="close">Закрыть</button></div><p id="copystatus" role="status"></p></dialog><div id="notice" role="status"></div>
 <script>
 const $=id=>document.getElementById(id),colors=['yellow','pink','blue','green','ink'];let board=new URLSearchParams(location.search).get('board'),objects=new Map(),selected=new Set(),mode='select',color='yellow',draft=null,drag=null,busy=new Set(),polling=false,noticeTimer;
@@ -151,6 +193,43 @@ const nodes=new Map();
 const history=[], future=[];
 const strokeWidths={pencil:2,pen:4.5};
 const ink={yellow:'#c69316',pink:'#cf4b7d',blue:'#315ae7',green:'#368257',ink:'#25364b'};
+const inkColors={pencil:'#555f6d',pen:'#25364b'};
+let lastInkTool='pen', paletteTool='pen';
+const swatches=[
+ ['Белый','#ffffff'],['Слоновая кость','#fff8e8'],['Почти белый','#f1f5f9'],['Светло-серый','#cbd5e1'],['Серый','#94a3b8'],['Графит','#555f6d'],['Чёрный','#101418'],
+ ['Розовый лёд','#fce7f3'],['Пудровый','#f9a8d4'],['Розовый','#ec4899'],['Алый','#ef4444'],['Красный','#b91c1c'],['Бордовый','#881337'],['Какао','#78350f'],
+ ['Кремовый','#fef3c7'],['Лимонный','#fde047'],['Жёлтый','#facc15'],['Янтарный','#f59e0b'],['Оранжевый','#f97316'],['Терракота','#c2410c'],['Карамель','#92400e'],
+ ['Мятный','#d1fae5'],['Салатовый','#bef264'],['Лайм','#84cc16'],['Зелёный','#22c55e'],['Лесной','#15803d'],['Бирюзовый','#14b8a6'],['Хвойный','#115e59'],
+ ['Ледяной','#cffafe'],['Небесный','#7dd3fc'],['Голубой','#38bdf8'],['Синий','#3b82f6'],['Ультрамарин','#1d4ed8'],['Индиго','#4338ca'],['Тёмно-синий','#1e293b'],
+ ['Лавандовый','#ede9fe'],['Сиреневый','#c4b5fd'],['Лиловый','#a78bfa'],['Фиолетовый','#8b5cf6'],['Аметист','#7e22ce'],['Сливовый','#581c87'],['Малиновый','#be185d']
+];
+function showInkColor(){
+ const value=inkColors[lastInkTool];
+ $('stroke-color').style.setProperty('--swatch',value);
+ $('color').style.setProperty('--swatch',value);
+}
+function setInk(value){
+ inkColors[paletteTool]=value;
+ showInkColor();
+ $('palette-dialog').close();
+}
+function openPalette(){
+ paletteTool=lastInkTool;
+ $('palette-heading').textContent=paletteTool==='pen'?'Цвет пера':'Цвет карандаша';
+ $('custom-ink').value=inkColors[paletteTool];
+ const list=$('ink-swatches');list.replaceChildren();
+ for(const [name,value] of swatches){
+  const item=document.createElement('button');item.type='button';item.className='ink-swatch';
+  item.title=name;item.setAttribute('aria-label',name);
+  item.setAttribute('aria-pressed',String(value===inkColors[paletteTool]));
+  item.style.setProperty('--swatch',value);
+  item.onclick=()=>setInk(value);list.append(item);
+ }
+ $('palette-dialog').showModal();
+}
+$('stroke-color').onclick=openPalette;
+$('use-custom-ink').onclick=()=>setInk($('custom-ink').value);
+$('close-palette').onclick=()=>$('palette-dialog').close();
 let zoom=1, lastPoint=null, undoing=false;
 function status(t){if($('status').textContent!==t)$('status').textContent=t;}
 function savedStatus(){
@@ -166,15 +245,16 @@ function setMode(m){
  });
  const drawing=m==='pen'||m==='pencil';
  $('stroke-controls').hidden=!drawing;
- if(drawing){$('stroke-width').value=strokeWidths[m];$('width-value').value=strokeWidths[m];}
- $('surface').style.cursor=m==='hand'?'grab':drawing||m==='eraser'?'crosshair':'default';
+ if(drawing){lastInkTool=m;showInkColor();$('stroke-width').value=strokeWidths[m];$('width-value').value=strokeWidths[m];}
+ if(m!=='connector')cancelConnection();
+ $('surface').style.cursor=m==='hand'?'grab':drawing||['eraser','shape','connector'].includes(m)?'crosshair':'default';
 }
 $('stroke-width').oninput=event=>{
  if(mode!=='pen'&&mode!=='pencil')return;
  strokeWidths[mode]=Number(event.target.value);
  $('width-value').value=event.target.value;
 };
-function editable(id){return ['note','text','emoji'].includes(objects.get(id)?.data.type);}
+function editable(id){return ['note','text','emoji','shape'].includes(objects.get(id)?.data.type);}
 function pick(ids=[]){
  for(const id of selected)nodes.get(id)?.classList.remove('selected');
  selected=new Set(ids.filter(id=>objects.has(id)&&!objects.get(id).deleted));
@@ -190,24 +270,29 @@ function renderObject(o){
   if(selected.has(id))pick([...selected]);
   return;
  }
- if(d.type==='stroke'){
+ if(d.type==='stroke'||d.type==='connector'){
   if(!el){
    el=document.createElementNS('http://www.w3.org/2000/svg','path');
    el.dataset.id=id;$('drawing').append(el);nodes.set(id,el);
   }
-  if(!el.hasAttribute('d')||el.dataPoints!==d.points){
-   el.setAttribute('d',strokePath(d.points));
-   el.dataPoints=d.points;
+  if(d.type==='connector'){
+   el.classList.add('connector');
+   if(d.arrow)el.setAttribute('marker-end','url(#arrowhead)');else el.removeAttribute('marker-end');
+   renderConnection(o);
+  }else{
+   const shade=ink[d.color]??d.color;
+   if(!el.hasAttribute('d')||el.dataPoints!==d.points||el.dataWeights!==d.weights){
+    styleStroke(el,d,shade);
+    el.dataPoints=d.points;el.dataWeights=d.weights;
+   }
+   el.setAttribute('transform','translate('+d.x+' '+d.y+')');
   }
-  el.setAttribute('transform','translate('+d.x+' '+d.y+')');
-  el.setAttribute('stroke',ink[d.color]);
-  el.setAttribute('stroke-width',d.width??({pencil:1.7,pen:4.6}[d.tool])??4);
  }else{
   if(!el){
    el=document.createElement('div');el.dataset.id=id;el.tabIndex=0;
    $('objects').append(el);nodes.set(id,el);
   }
-  el.className='obj '+d.type+(d.type==='emoji'?'':' '+d.color);
+  el.className='obj '+d.type+(d.type==='emoji'?'':' '+d.color)+(d.type==='shape'?' form-'+d.form:'');
   el.style.left=d.x+'px';el.style.top=d.y+'px';
   if(d.type==='image'){
    let img=el.firstElementChild;
@@ -215,7 +300,11 @@ function renderObject(o){
    if(img.getAttribute('src')!==d.src)img.src=d.src;
    el.style.width=d.width+'px';
   }else if(el.textContent!==d.text)el.textContent=d.text;
-  const label={image:'Изображение',note:'Заметка. '+d.text,text:'Текст. '+d.text,emoji:'Эмодзи. '+d.text};
+  if(d.type==='shape'){
+   el.style.width=d.width+'px';el.style.height=d.height+'px';
+   if(d.form==='triangle')el.style.padding='0 '+Math.round(d.width*.2)+'px '+Math.round(d.height*.04)+'px';
+  }
+  const label={shape:'Фигура. '+d.text,image:'Изображение',note:'Заметка. '+d.text,text:'Текст. '+d.text,emoji:'Эмодзи. '+d.text};
   el.setAttribute('aria-label',label[d.type]);
  }
  el.classList.toggle('selected',selected.has(id));
@@ -226,10 +315,12 @@ async function refresh(){
  try{
   const j=await api('/'+board);
   applyBoardSettings(j.settings);
+  let geometryChanged=false;
   for(const o of j.objects){
    if(busy.has(o.id)||drag?.originals?.has(o.id)||(objects.get(o.id)?.version??0)>=o.version)continue;
-   objects.set(o.id,o);renderObject(o);
+   objects.set(o.id,o);renderObject(o);geometryChanged||=o.data.type!=='stroke';
   }
+  if(geometryChanged)renderConnections();
   if(connectionLost){connectionLost=false;if(!busy.size)status('');}
  }catch(err){
   if(!connectionLost){connectionLost=true;status('Нет связи');notice(err.message);}
@@ -245,11 +336,11 @@ async function put(o,{remember=true,previous=objects.get(o.id)}={}){
  try{
   const j=await api('/'+board+'/objects/'+o.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});
   const next={...o,version:j.version};
-  objects.set(o.id,next);renderObject(next);
+  objects.set(o.id,next);renderObject(next);if(next.data.type!=='stroke')renderConnections();
   if(remember)rememberAction([{id:o.id,previous,next,version:j.version}]);
   return true;
  }catch(err){
-  if(previous)renderObject(previous);
+  if(previous){renderObject(previous);if(previous.data.type!=='stroke')renderConnections();}
   if(err.status===409)queueMicrotask(refresh);
   notice(err.message);status('Не сохранено');return false;
  }finally{
@@ -280,6 +371,43 @@ function strokePath(points){
   path+=' C'+at(bx+(cx-ax)/6,by+(cy-ay)/6)+' '+at(cx-(dx-bx)/6,cy-(dy-by)/6)+' '+at(cx,cy);
  }
  return path;
+}
+function inkOutline(points,weights,width,tool){
+ if(!points.length)return '';
+ const first=points[0],last=points.at(-1);
+ if(points.length<3&&Math.hypot(last[0]-first[0],last[1]-first[1])<.3){
+  const radius=Math.max(.35,width*.27),[x,y]=first;
+  return 'M'+(x-radius)+' '+y+' a'+radius+' '+radius+' 0 1 0 '+(2*radius)+' 0 a'+radius+' '+radius+' 0 1 0 '+(-2*radius)+' 0 Z';
+ }
+ const centers=points.map((p,i)=>{
+  if(!i||i===points.length-1)return p;
+  return p.map((n,k)=>(points[i-1][k]+n*4+points[i+1][k])/6);
+ });
+ const distance=[0];
+ for(let i=1;i<centers.length;i++)distance.push(distance.at(-1)+Math.hypot(centers[i][0]-centers[i-1][0],centers[i][1]-centers[i-1][1]));
+ const left=[],right=[];
+ for(let i=0;i<centers.length;i++){
+  const [x,y]=centers[i],a=centers[Math.max(0,i-1)],b=centers[Math.min(centers.length-1,i+1)];
+  const dx=b[0]-a[0],dy=b[1]-a[1],angle=Math.atan2(dy,dx);
+  const nib=tool==='pen'?.55+.45*Math.abs(Math.sin(angle-.63)):1;
+  const taperLength=Math.max(1.2,width*2);
+  const taper=Math.min(1,.44+distance[i]/taperLength,.18+(distance.at(-1)-distance[i])/taperLength);
+  const r=Math.max(.07,width*.5*weights[i]*nib*taper);
+  const nx=-Math.sin(angle)*r,ny=Math.cos(angle)*r;
+  left.push([x+nx,y+ny]);right.push([x-nx,y-ny]);
+ }
+ return strokePath(left)+' '+strokePath(right.reverse()).replace(/^M/,'L')+' Z';
+}
+function styleStroke(node,data,shade){
+ if(data.weights){
+  node.classList.add('ink-outline',data.tool);
+  node.style.setProperty('--ink-color',shade);
+  node.setAttribute('d',inkOutline(data.points,data.weights,data.width,data.tool));
+ }else{
+  node.setAttribute('d',strokePath(data.points));
+  node.setAttribute('stroke',shade);
+  node.setAttribute('stroke-width',data.width??({pencil:1.7,pen:4.6}[data.tool])??4);
+ }
 }
 function changeZoom(next,event){
  if(drag)return;
@@ -339,10 +467,14 @@ async function removeSelected(){
 }
 async function cloneItems(items,point){
  const minX=Math.min(...items.map(o=>o.data.x)),minY=Math.min(...items.map(o=>o.data.y));
- const ids=await commitGroup(items.map(o=>({
-  id:crypto.randomUUID(),version:0,deleted:0,
-  data:{...o.data,x:o.data.x-minX+point[0],y:o.data.y-minY+point[1]}
- })));
+ const newIds=new Map(items.map(o=>[o.id,crypto.randomUUID()]));
+ const ids=await commitGroup(items.map(o=>{
+  const data={...o.data,x:o.data.x-minX+point[0],y:o.data.y-minY+point[1]};
+  if(data.type==='connector'){
+   data.from=newIds.get(data.from)??null;data.to=newIds.get(data.to)??null;
+  }
+  return {id:newIds.get(o.id),version:0,deleted:0,data};
+ }));
  if(ids.length){setMode('select');pick(ids);}
 }
 const clipboardType='application/x-obshchaya-doska';
@@ -449,12 +581,20 @@ function emojiPicker(object){
 }
 $('emoji').onclick=()=>emojiPicker();
 $('close-emoji').onclick=()=>$('emoji-dialog').close();
-function openEdit(o){
+function openEdit(o,parent=null){
+ pendingBranch=parent;
+ const shape=o.data.type==='shape';
+ $('shape-size').hidden=!shape;
+ $('shape-width').required=shape;$('shape-height').required=shape;
+ $('shape-width').value=shape?o.data.width:'';
+ $('shape-height').value=shape?o.data.height:'';
+ $('text').required=!shape;
  if(o.data.type==='emoji'){emojiPicker(o);return;}
- draft=structuredClone(o);$('text').value=o.data.text;drawColors();$('error').textContent='';$('editor-title').textContent=o.data.type==='note'?'Заметка':'Текст';$('editor').showModal();$('text').focus()}
+ draft=structuredClone(o);$('text').value=o.data.text;drawColors();$('error').textContent='';$('editor-title').textContent=shape?'Текст фигуры':o.data.type==='note'?'Заметка':'Текст';$('editor').showModal();$('text').focus()}
 function drawColors(){$('colors').replaceChildren();for(const c of colors){const b=document.createElement('button');b.type='button';b.textContent=({yellow:'Жёлтый',pink:'Розовый',blue:'Голубой',green:'Зелёный',ink:'Серый'})[c];b.className=c;b.setAttribute('aria-pressed',draft.data.color===c);b.onclick=()=>{draft.data.color=c;drawColors()};$('colors').append(b)}}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-$('color').onclick=()=>{color=colors[(colors.indexOf(color)+1)%colors.length];$('color').dataset.color=color};
+$('color').onclick=openPalette;
+showInkColor();
 async function create(){try{status('Создаём…');const j=await api('',{method:'POST'});location.href='?board='+j.id}catch(e){notice(e.message);status('Не удалось создать')}}
 $('start').onclick=create;
 $('new').onclick=()=>{if(accountKey)location.href='?view=mine';else create();};
@@ -522,6 +662,105 @@ $('copy-key').onclick=async()=>{
  catch{$('key-value').select();$('key-status').textContent='Скопируй выделенный ключ.';}
 };
 const surface=$('surface');
+const figures=[
+ ['rectangle','Прямоугольник','▭','blue'],['round','Скруглённый блок','▢','pink'],
+ ['ellipse','Овал','◯','green'],['diamond','Ромб','◇','yellow'],['triangle','Треугольник','△','pink']
+];
+const routes=[['curve','Плавная линия','∿'],['straight','Прямая линия','╱'],['elbow','Угловая линия','┐']];
+let shapeForm='rectangle',connectionRoute='curve',connectionStart=null,connectionPreview=null,pendingBranch=null;
+function choice(label,symbol,action){
+ const button=document.createElement('button');button.type='button';button.className='figure-choice';
+ const sample=document.createElement('span');sample.className='figure-sample';sample.setAttribute('aria-hidden','true');sample.textContent=symbol;
+ button.append(sample,document.createTextNode(label));button.onclick=action;return button;
+}
+for(const [form,label,symbol] of figures)$('shape-list').append(choice(label,symbol,()=>{
+ shapeForm=form;$('shapes-dialog').close();setMode('shape');setDiagramHelp('Щёлкни по доске, чтобы поставить фигуру.');
+}));
+for(const [route,label,symbol] of routes)$('connection-options').append(choice(label,symbol,()=>{
+ connectionRoute=route;$('diagram-dialog').close();cancelConnection();setMode('connector');
+ setDiagramHelp('Щёлкни по первому блоку или точке.');
+}));
+$('shapes').onclick=()=>$('shapes-dialog').showModal();
+$('close-shapes').onclick=()=>$('shapes-dialog').close();
+$('diagram').onclick=()=>{
+ const parent=selected.size===1&&anchorBounds([...selected][0]);
+ $('mind-branch').disabled=!parent;$('mind-hint').hidden=Boolean(parent);
+ $('diagram-dialog').showModal();
+};
+$('close-diagram').onclick=()=>$('diagram-dialog').close();
+$('mind-root').onclick=()=>{
+ $('diagram-dialog').close();setMode('select');
+ openEdit(shapeObject('mind',insertPoint(),'Главная идея','blue',220,110));
+};
+$('mind-branch').onclick=()=>{
+ const id=[...selected][0],parent=anchorBounds(id);
+ if(!parent)return;
+ const siblings=[...objects.values()].filter(o=>!o.deleted&&o.data.type==='connector'&&o.data.from===id).length;
+ const x=parent.x+parent.w+90,y=Math.max(8,parent.y+(siblings%2?-1:1)*Math.ceil(siblings/2)*112);
+ $('diagram-dialog').close();setMode('select');
+ openEdit(shapeObject('mind',[x,y],'Новая ветвь',['green','pink','yellow','blue'][siblings%4],180,85),id);
+};
+function shapeObject(form,[x,y],text,fill=figures.find(item=>item[0]===form)?.[3]??'blue',width=form==='triangle'?200:180,height=form==='triangle'?150:105){
+ return {id:crypto.randomUUID(),version:0,deleted:0,data:{type:'shape',x,y,text,color:fill,points:[],form,width,height}};
+}
+function setDiagramHelp(text=''){
+ $('diagram-help').textContent=text;$('diagram-help').hidden=!text;
+}
+function cancelConnection(){
+ connectionStart=null;connectionPreview?.remove();connectionPreview=null;
+ setDiagramHelp();
+}
+function anchorBounds(id){
+ if(!id)return null;
+ const o=objects.get(id),node=nodes.get(id);
+ if(!o||o.deleted||!node||['stroke','connector'].includes(o.data.type))return null;
+ return {x:node.offsetLeft,y:node.offsetTop,w:node.offsetWidth,h:node.offsetHeight};
+}
+function middle({x,y,w,h}){return [x+w/2,y+h/2];}
+function anchorPoint(bounds,toward,fallback){
+ if(!bounds)return fallback;
+ const [x,y]=middle(bounds),dx=toward[0]-x,dy=toward[1]-y;
+ const ratio=Math.max(Math.abs(dx)/Math.max(1,bounds.w/2),Math.abs(dy)/Math.max(1,bounds.h/2));
+ return ratio?[x+dx/ratio,y+dy/ratio]:[x+bounds.w/2,y];
+}
+function connectionPath(d){
+ const from=anchorBounds(d.from),to=anchorBounds(d.to);
+ const [a,b]=d.points.map(([x,y])=>[x+d.x,y+d.y]);
+ const start=anchorPoint(from,to?middle(to):b,a),end=anchorPoint(to,from?middle(from):a,b);
+ const [x,y]=start,[u,v]=end,midX=(x+u)/2,midY=(y+v)/2;
+ const horizontal=Math.abs(u-x)>=Math.abs(v-y);
+ if(d.route==='straight')return 'M'+x+' '+y+' L'+u+' '+v;
+ if(d.route==='elbow')return horizontal?'M'+x+' '+y+' H'+midX+' V'+v+' H'+u:'M'+x+' '+y+' V'+midY+' H'+u+' V'+v;
+ return horizontal?'M'+x+' '+y+' C'+midX+' '+y+' '+midX+' '+v+' '+u+' '+v:'M'+x+' '+y+' C'+x+' '+midY+' '+u+' '+midY+' '+u+' '+v;
+}
+function renderConnection(o){nodes.get(o.id)?.setAttribute('d',connectionPath(o.data));}
+function renderConnections(){
+ for(const o of objects.values())if(!o.deleted&&o.data.type==='connector')renderConnection(o);
+}
+function connectionObject(start,end,route,arrow){
+ const [x,y]=start.point;
+ return {id:crypto.randomUUID(),version:0,deleted:0,data:{
+  type:'connector',x,y,points:[[0,0],[end.point[0]-x,end.point[1]-y]],
+  from:start.id,to:end.id,route,arrow,text:'',color:'blue'
+ }};
+}
+async function connectionClick(point,id){
+ const end={point,id:anchorBounds(id)?id:null};
+ if(connectionStart){
+  if(end.id&&end.id===connectionStart.id)return;
+  const o=connectionObject(connectionStart,end,connectionRoute,$('use-arrow').checked);
+  cancelConnection();
+  if(await put(o)){setMode('select');pick([o.id]);}
+  return;
+ }
+ connectionStart=end;
+ connectionPreview=document.createElementNS('http://www.w3.org/2000/svg','path');
+ connectionPreview.classList.add('connector','connection-preview');$('drawing').append(connectionPreview);
+ setDiagramHelp('Щёлкни по второму блоку или точке. Esc отменяет.');
+}
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&(mode==='connector'||mode==='shape')&&!document.querySelector('dialog[open]'))setMode('select');
+});
 function coverRectangle(start,end){
  const [x,y]=start,[a,b]=end;
  const left=Math.min(x,a),top=Math.min(y,b),width=Math.abs(x-a),height=Math.abs(y-b);
@@ -537,14 +776,18 @@ function objectsIn(box){
 surface.addEventListener('pointerdown',ev=>{
  if(ev.button!==0||drag)return;
  const [x,y]=pos(ev),id=ev.target.closest('[data-id]')?.dataset.id;
+ if(mode==='connector'){connectionClick([x,y],id);return;}
+ if(mode==='shape'){setMode('select');openEdit(shapeObject(shapeForm,[x,y],''));return;}
  if(mode==='hand'){
   drag={pan:true,sx:ev.clientX,sy:ev.clientY,left:surface.scrollLeft,top:surface.scrollTop};
  }else if(mode==='eraser'){
   drag={eraser:true};eraseStroke(ev.target);
  }else if(mode==='pen'||mode==='pencil'){
   const line=document.createElementNS('http://www.w3.org/2000/svg','path');
-  line.id='preview';line.setAttribute('stroke',ink[color]);line.setAttribute('stroke-width',String(strokeWidths[mode]));
-  $('drawing').append(line);drag={pen:true,points:[[x,y]],color,width:strokeWidths[mode],tool:mode,line,frame:0};
+  line.id='preview';
+  const initialWeight=ev.pointerType==='pen'?Math.min(1.45,.35+ev.pressure*1.13):1;
+  drag={pen:true,points:[[x,y]],weights:[initialWeight],sampleTime:ev.timeStamp,weight:initialWeight,color:inkColors[mode],tool:mode,width:strokeWidths[mode],line,frame:0};
+  $('drawing').append(line);styleStroke(line,drag,drag.color);
  }else if(mode==='note'||mode==='text'){
   openEdit({id:crypto.randomUUID(),version:0,deleted:0,data:{type:mode,x,y,text:'',color,points:[]}});return;
  }else if(id){
@@ -563,7 +806,7 @@ surface.addEventListener('pointerdown',ev=>{
 function eraseStroke(target){
  const id=target?.closest('path[data-id]')?.dataset.id;
  const o=objects.get(id);
- if(o&&!o.deleted&&!busy.has(id))put({...o,deleted:1});
+ if(o&&['stroke','connector'].includes(o.data.type)&&!o.deleted&&!busy.has(id))put({...o,deleted:1});
 }
 function sampleStroke(event,d){
  const samples=event.getCoalescedEvents?.();
@@ -572,18 +815,31 @@ function sampleStroke(event,d){
   if(d.points.length>=3000)break;
   const x=(sample.clientX-bounds.left)/zoom,y=(sample.clientY-bounds.top)/zoom;
   const p=d.points.at(-1);
-  if(Math.hypot(p[0]-x,p[1]-y)>=Math.max(.15,.55/zoom))d.points.push([x,y]);
+  const distance=Math.hypot(p[0]-x,p[1]-y);
+  if(distance<Math.max(.15,.55/zoom))continue;
+  const speed=distance*zoom/Math.max(1,sample.timeStamp-d.sampleTime);
+  const target=sample.pointerType==='pen'&&sample.pressure>0
+   ? .35+sample.pressure*1.13
+   : d.tool==='pen'?.48+.66/(1+speed*.9):.76+.29/(1+speed*.65);
+  d.weight=d.weight*.72+target*.28;
+  d.points.push([x,y]);d.weights.push(Math.round(d.weight*1000)/1000);
+  d.sampleTime=sample.timeStamp;
  }
 }
 function movingObject(o,dx,dy){return {...o,data:{...o.data,x:o.data.x+dx,y:o.data.y+dy}};}
 surface.addEventListener('pointermove',ev=>{
  lastPoint=pos(ev);
+ if(connectionPreview&&connectionStart){
+  const [x,y]=connectionStart.point;
+  const data={x,y,points:[[0,0],[lastPoint[0]-x,lastPoint[1]-y]],from:connectionStart.id,to:null,route:connectionRoute};
+  connectionPreview.setAttribute('d',connectionPath(data));
+ }
  if(!drag||drag.pointer!==ev.pointerId)return;
  if(drag.pan){surface.scrollLeft=drag.left+drag.sx-ev.clientX;surface.scrollTop=drag.top+drag.sy-ev.clientY;return;}
  if(drag.eraser){eraseStroke(document.elementFromPoint(ev.clientX,ev.clientY));return;}
  if(drag.pen){
   const d=drag;sampleStroke(ev,d);
-  if(!d.frame)d.frame=requestAnimationFrame(()=>{d.frame=0;d.line.setAttribute('d',strokePath(d.points));});
+  if(!d.frame)d.frame=requestAnimationFrame(()=>{d.frame=0;styleStroke(d.line,d,d.color);});
   return;
  }
  const dx=lastPoint[0]-drag.start[0],dy=lastPoint[1]-drag.start[1];
@@ -591,6 +847,7 @@ surface.addEventListener('pointermove',ev=>{
  drag.moved=true;
  if(drag.selection){coverRectangle(drag.start,lastPoint);return;}
  for(const o of drag.originals.values())renderObject(movingObject(o,dx,dy));
+ renderConnections();
 });
 async function release(event,cancel=false){
  if(!drag||drag.pointer!==event.pointerId)return;
@@ -604,17 +861,17 @@ async function release(event,cancel=false){
   cancelAnimationFrame(d.frame);
   if(cancel){d.line.remove();return;}
   sampleStroke(event,d);
-  if(d.points.length===1){const [x,y]=d.points[0];d.points.push([x+.1,y]);}
+  if(d.points.length===1){const [x,y]=d.points[0];d.points.push([x+.1,y]);d.weights.push(d.weights[0]);}
   const id=crypto.randomUUID();
   d.line.removeAttribute('id');d.line.dataset.id=id;
-  d.line.setAttribute('d',strokePath(d.points));d.line.dataPoints=d.points;nodes.set(id,d.line);
-  const data={type:'stroke',x:0,y:0,points:d.points,text:'',color:d.color,tool:d.tool,width:d.width};
+  styleStroke(d.line,d,d.color);d.line.dataPoints=d.points;d.line.dataWeights=d.weights;nodes.set(id,d.line);
+  const data={type:'stroke',x:0,y:0,points:d.points,weights:d.weights,text:'',color:d.color,tool:d.tool,width:d.width};
   if(!await put({id,version:0,deleted:0,data})){d.line.remove();nodes.delete(id);}
   return;
  }
  if(!d.moved)return;
  const [x,y]=pos(event),dx=x-d.start[0],dy=y-d.start[1];
- if(cancel){for(const o of d.originals.values())renderObject(o);return;}
+ if(cancel){for(const o of d.originals.values())renderObject(o);renderConnections();return;}
  await commitGroup([...d.originals.values()].map(o=>movingObject(o,dx,dy)));
 }
 surface.addEventListener('pointerup',release);
@@ -631,7 +888,25 @@ $('objects').addEventListener('keydown',ev=>{
 });
 $('edit').onclick=()=>{if(selected.size===1)openEdit(objects.get([...selected][0]));};
 $('del').onclick=removeSelected;
-$('editform').onsubmit=async ev=>{ev.preventDefault();draft.data.text=$('text').value;const submit=ev.submitter;submit.disabled=true;const ok=await put(draft);submit.disabled=false;if(ok){$('editor').close();setMode('select')}else $('error').textContent='Текст сохранён в этом окне. Скопируй его перед закрытием или повтори сохранение.'};
+$('editform').onsubmit=async ev=>{
+ ev.preventDefault();
+ const savedDraft={...draft,data:{...draft.data,text:$('text').value}};
+ if(savedDraft.data.type==='shape'){
+  savedDraft.data.width=Number($('shape-width').value);savedDraft.data.height=Number($('shape-height').value);
+ }
+ const submit=ev.submitter;submit.disabled=true;
+ let ok;
+ const parent=pendingBranch&&anchorBounds(pendingBranch);
+ if(parent){
+  const edge=connectionObject({point:middle(parent),id:pendingBranch},{
+   point:[savedDraft.data.x+savedDraft.data.width/2,savedDraft.data.y+savedDraft.data.height/2],id:savedDraft.id
+  },'curve',true);
+  const ids=await commitGroup([savedDraft,edge]);ok=ids.includes(savedDraft.id);
+ }else ok=await put(savedDraft);
+ submit.disabled=false;
+ if(ok){$('editor').close();setMode('select');pick([savedDraft.id]);pendingBranch=null;}
+ else $('error').textContent='Не удалось сохранить. Попробуй ещё раз.';
+};
 $('cancel').onclick=()=>$('editor').close();
 $('share').onclick=()=>{$('shareurl').value=location.href;$('invite').showModal()};$('close').onclick=()=>$('invite').close();$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copystatus').textContent='Ссылка скопирована'}catch{$('shareurl').select();$('copystatus').textContent='Скопируй выделенную ссылку'}};
 $('export').onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({board,objects:[...objects.values()].filter(o=>!o.deleted)},null,2)],{type:'application/json'}));a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
