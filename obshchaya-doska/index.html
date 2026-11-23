@@ -379,6 +379,29 @@ async function commitGroup(changes,{stopOnFailure=false}={}){
  rememberAction(entries);
  return entries.map(entry=>entry.id);
 }
+async function saveVisibility(changes){
+ if(!changes.length||changes.some(o=>busy.has(o.id)))return false;
+ for(const o of changes)busy.add(o.id);
+ clearTimeout(saveTimer);status('Сохраняем…');
+ try{
+  const items=changes.map(({id,version,deleted})=>({id,version,deleted}));
+  await api('/'+board+'/object-visibility',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})});
+  const hidden=new Set(changes.filter(o=>o.deleted).map(o=>o.id));
+  if([...selected].some(id=>hidden.has(id)))pick([...selected].filter(id=>!hidden.has(id)));
+  for(const o of changes){
+   const next={...o,version:o.version+1};
+   objects.set(o.id,next);renderObject(next);
+  }
+  renderConnections();
+  return true;
+ }catch(err){
+  if(err.status===409)queueMicrotask(refresh);
+  notice(err.message);status('Не сохранено');return false;
+ }finally{
+  for(const o of changes)busy.delete(o.id);
+  if(!busy.size&&$('status').textContent==='Сохраняем…')savedStatus();
+ }
+}
 function pos(ev){
  const r=$('world').getBoundingClientRect();
  return [(ev.clientX-r.left)/zoom,(ev.clientY-r.top)/zoom].map(n=>Math.round(n*10)/10);
@@ -463,6 +486,20 @@ async function replay(redo=false){
  undoing=true;updateUndo();
  try{
   const batch=from.pop(), applied=[];
+  if(batch.every(entry=>entry.previous&&entry.previous.deleted!==entry.next.deleted)){
+   if(batch.some(entry=>objects.get(entry.id)?.version!==entry.version)){
+    notice('Один из объектов уже изменил другой участник. Его правка сохранена.');return;
+   }
+   const changes=batch.map(entry=>({...objects.get(entry.id),deleted:(redo?entry.next:entry.previous).deleted}));
+   if(!await saveVisibility(changes)){from.push(batch);return;}
+   for(const entry of batch){
+    const target=redo?entry.next:entry.previous;
+    const older=from.flat().findLast(item=>item.id===entry.id);
+    if(older&&target.version===(redo?older.previous?.version:older.next.version))older.version=entry.version+1;
+    applied.push({...entry,version:entry.version+1});
+   }
+   to.push(applied);return;
+  }
   for(const entry of batch){
    const current=objects.get(entry.id);
    if(current?.version!==entry.version){
@@ -486,7 +523,13 @@ function typing(target){return target.closest('input, textarea, select, [content
 function boardShortcut(event){return board&&!typing(event.target)&&!document.querySelector('dialog[open]');}
 async function removeSelected(){
  if(drag||undoing)return;
- await commitGroup([...selected].map(id=>({...objects.get(id),deleted:1})));
+ const previous=[...selected].map(id=>objects.get(id)).filter(o=>o&&!o.deleted);
+ if(previous.some(o=>busy.has(o.id))){notice('Подожди, пока сохранятся изменения, и повтори удаление.');return;}
+ if(!await saveVisibility(previous.map(o=>({...o,deleted:1}))))return;
+ rememberAction(previous.map(o=>{
+  const next=objects.get(o.id);
+  return {id:o.id,previous:o,next,version:next.version};
+ }));
 }
 async function cloneItems(items,point){
  const minX=Math.min(...items.map(o=>o.data.x)),minY=Math.min(...items.map(o=>o.data.y));
