@@ -14,6 +14,60 @@
 #board-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:24px 0}
 .board-card{display:grid;gap:10px;padding:16px;background:#fff;border:1px solid #d5dce6;border-radius:14px}
 .board-card a{color:#2449b8;overflow-wrap:anywhere;min-height:30px}
+
+body:has(#surface:not([hidden])){background:#edf2f8}
+header{position:relative;z-index:6;height:67px;padding:8px 20px;background:#fafcff;border-color:#d9e3ef}
+header h1{letter-spacing:-.025em;color:#172a43}
+header .row{align-items:center}
+header #share{background:#315ae7;border-color:#315ae7;color:#fff;font-weight:700}
+#surface{top:67px;background-color:#f6f9fe;background-image:linear-gradient(to right,#dfe7f2 1px,transparent 1px),linear-gradient(to bottom,#dfe7f2 1px,transparent 1px);background-size:32px 32px}
+#tools{top:84px;left:16px;max-height:calc(100dvh - 102px);max-width:none;width:128px;padding:6px;gap:4px;flex-direction:column;flex-wrap:nowrap;overflow:auto;border-radius:17px;border-color:#d9e3ef;background:#fcfdff;box-shadow:0 14px 36px #203b651a;scrollbar-width:thin}
+.tool-group{display:flex;flex-direction:column;gap:3px}
+.tool-group+.tool-group{border-top:1px solid #e1e8f2;padding-top:4px}
+#tools .tool-button{display:flex;align-items:center;width:100%;min-height:43px;gap:6px;padding:4px;background:transparent;border:1px solid transparent;border-radius:10px;color:#273a54;text-align:left}
+#tools .tool-button:not(:disabled):hover{background:#edf3fb}
+#tools .tool-button.active{background:#e6efff;border-color:#c1d2f7;color:#203f91;box-shadow:inset 2px 0 #4266dc}
+#tools .tool-button:disabled{opacity:.46;cursor:default}
+#tools .tool-button:focus-visible{outline-offset:-2px}
+.tool-label{font-size:.875rem;line-height:1.1;font-weight:650}
+.tool-icon{position:relative;display:grid;place-items:center;width:29px;height:29px;flex:0 0 29px;border-radius:8px;background:var(--tile);color:var(--icon)}
+.tool-icon svg{position:static;inset:auto;width:19px;height:19px;pointer-events:none}
+.tool-icon svg *{pointer-events:none}
+.tone-violet{--tile:#ebdfff;--icon:#5c34b5}
+.tone-cyan{--tile:#d8f4f8;--icon:#0d6475}
+.tone-green{--tile:#d9f2e4;--icon:#166346}
+.tone-blue{--tile:#dceaff;--icon:#214eb2}
+.tone-pink{--tile:#ffe2ed;--icon:#a03467}
+.tone-amber{--tile:#ffedc9;--icon:#815000}
+#color .tool-icon::after{content:'';position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;border:2px solid #fff;background:var(--swatch,#f4bc39)}
+#color[data-color=pink]{--swatch:#cf4b7d}
+#color[data-color=blue]{--swatch:#315ae7}
+#color[data-color=green]{--swatch:#368257}
+#color[data-color=ink]{--swatch:#25364b}
+#zoom-controls{position:fixed;z-index:5;right:18px;bottom:18px;display:flex;gap:2px;padding:5px;background:#fcfdff;border:1px solid #d9e3ef;border-radius:15px;box-shadow:0 10px 28px #203b651c}
+#zoom-controls button{border:0;min-width:43px;padding:6px 9px;font-weight:750;background:transparent}
+#zoom-controls button:hover{background:#e8f0ff;color:#214eb2}
+#notice{bottom:76px}
+@keyframes tool-tap{0%{transform:scale(.83)}55%{transform:scale(1.13)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:no-preference){
+ .tool-icon{transition:transform 160ms ease,filter 160ms ease}
+ .tool-button:not(:disabled):is(:hover,:focus-visible) .tool-icon{transform:translateY(-2px) rotate(-7deg);filter:saturate(1.18)}
+ .tool-button.active .tool-icon,.tool-button:not(:disabled):active .tool-icon{animation:tool-tap 245ms ease-out}
+}
+@media(max-width:680px){
+ header{padding:6px 9px;gap:6px}
+ header h1{font-size:16px}
+ header #status{display:none}
+ header .row{gap:4px}
+ header button{font-size:.875rem;padding:8px}
+ #tools{position:fixed;top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:none;display:flex;flex-direction:row;gap:6px;padding:4px;overflow-x:auto}
+ .tool-group{flex-direction:row;flex:none}
+ .tool-group+.tool-group{border-top:0;border-left:1px solid #e1e8f2;padding:0 0 0 5px}
+ #tools .tool-button{flex-direction:column;width:61px;min-height:60px;gap:3px;padding:3px 1px;text-align:center}
+ .tool-label{font-size:.875rem}
+ #zoom-controls{bottom:92px;right:8px}
+ #notice{bottom:150px}
+}
 </style>
 <header><div><h1>▧ Общая доска</h1><small>Место для совместных идей</small></div><span id="status" role="status"></span><div class="row" style="margin:0"><button id="share" hidden>Пригласить</button><button id="dashboard-link">Мои доски</button><button id="new">Новая доска</button></div></header>
 <section id="welcome"><small>РАБОТАЕМ ВМЕСТЕ</small><h2>Одна доска.<br>Много хороших идей.</h2><p>Добавляйте стикеры, пишите и рисуйте вместе. Вернитесь по той же ссылке, чтобы продолжить работу.</p><button id="start" class="primary">Создать доску</button><div class="demo" aria-hidden="true"><div class="yellow">Что мы уже знаем?<br><br>Собираем идеи</div><div class="blue">Что попробуем?<br><br>Планируем вместе</div><div class="pink">Наш результат<br><br>Делимся находками</div></div><div id="recent"></div></section>
@@ -33,7 +87,12 @@
 <dialog id="key-dialog"><h2>Ключ доступа</h2><p>Сохрани его для входа с другого устройства. Ключ даёт доступ к списку твоих досок.</p><input id="key-value" readonly aria-label="Ключ доступа"><div class="row"><button id="copy-key">Скопировать</button><button id="close-key">Закрыть</button></div><p id="key-status" role="status"></p></dialog>
 <dialog id="rename-dialog"><form id="rename-form"><label for="rename-title">Новое название доски</label><input id="rename-title" maxlength="80" required><div class="row"><button class="primary">Сохранить</button><button id="cancel-rename" type="button">Отмена</button></div></form></dialog>
 <div id="surface" hidden><div id="extent"><div id="world"><svg id="drawing" width="5000" height="4000" aria-label="Рисунки"></svg><div id="objects"></div></div></div></div>
-<nav id="tools" aria-label="Инструменты доски" hidden><button data-mode="select" class="active">Выбор</button><button data-mode="note">Стикер</button><button data-mode="text">Текст</button><button data-mode="pencil">Карандаш</button><button data-mode="pen">Перо</button><button data-mode="eraser">Ластик</button><button data-mode="hand">Рука</button><button id="color" class="yellow" title="Цвет следующего объекта">Цвет</button><button id="edit" disabled>Изменить</button><button id="del" disabled>Удалить</button><button id="image">Картинка</button><input id="image-file" type="file" accept="image/*" hidden><button id="undo" title="Ctrl+Z" disabled>Отменить</button><div class="zoom"><button id="zoom-out" aria-label="Уменьшить масштаб">−</button><button id="zoom-reset" aria-label="Сбросить масштаб">100%</button><button id="zoom-in" aria-label="Увеличить масштаб">+</button></div><button id="export">Скачать копию</button></nav>
+<nav id="tools" aria-label="Инструменты доски" hidden>
+<div class="tool-group"><button type="button" data-mode="select" aria-pressed="true" class="tool-button tone-violet active" title="Выбор" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 1-3 6z"/><path d="m12 14 4 5"/></svg></span><span class="tool-label">Выбор</span></button><button type="button" data-mode="hand" aria-pressed="false" class="tool-button tone-cyan" title="Рука" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v5a7 7 0 0 1-7 7c-3 0-4-1-6-3l-3-4a1.5 1.5 0 0 1 2-2z"/></svg></span><span class="tool-label">Рука</span></button><button type="button" data-mode="note" aria-pressed="false" class="tool-button tone-amber" title="Стикер" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 0 1 2 2v9l-7 7H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5M7 8h10M7 12h5"/></svg></span><span class="tool-label">Стикер</span></button><button type="button" data-mode="text" aria-pressed="false" class="tool-button tone-violet" title="Текст" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M12 4v16m-4 0h8"/></svg></span><span class="tool-label">Текст</span></button><button type="button" id="image" class="tool-button tone-green" title="Картинка" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 4-4 3 3 4-5 5 6"/></svg></span><span class="tool-label">Картинка</span></button></div>
+<div class="tool-group"><button type="button" data-mode="pencil" aria-pressed="false" class="tool-button tone-amber" title="Карандаш" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 1-5L16 4a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3L9 19zM14 6l4 4M5 15l4 4"/></svg></span><span class="tool-label">Карандаш</span></button><button type="button" data-mode="pen" aria-pressed="false" class="tool-button tone-blue" title="Перо" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 19 2-8 7-7 6 6-7 7zM5 19l5-5m4-10 2-2 6 6-2 2"/><circle cx="11" cy="13" r="1"/></svg></span><span class="tool-label">Перо</span></button><button type="button" data-mode="eraser" aria-pressed="false" class="tool-button tone-pink" title="Ластик" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 8-8a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-5a2 2 0 0 1 0-3zM8 8l8 8m-4 4h9"/></svg></span><span class="tool-label">Ластик</span></button><button type="button" id="color" class="tool-button tone-pink" title="Цвет" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-3.7 1 1 0 0 1 .6-1.8H18a3 3 0 0 0 3-3 9 9 0 0 0-9-9.5Z"/><path d="M7 10h.01M11 7h.01M15 8h.01M7 14h.01" stroke-width="3"/></svg></span><span class="tool-label">Цвет</span></button></div>
+<div class="tool-group"><button type="button" id="edit" class="tool-button tone-blue" title="Изменить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7m-12 4 1-4L17 4a2 2 0 0 1 3 3l-8 8z"/></svg></span><span class="tool-label">Изменить</span></button><button type="button" id="del" class="tool-button tone-pink" title="Удалить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V3h6v3M6 6l1 14h10l1-14m-8 4v6m4-6v6"/></svg></span><span class="tool-label">Удалить</span></button><button type="button" id="undo" class="tool-button tone-blue" title="Отменить" disabled><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 5-5 5 5 5m-5-5h10a6 6 0 0 1 6 6v2"/></svg></span><span class="tool-label">Отменить</span></button><button type="button" id="export" class="tool-button tone-green" title="Скачать копию" ><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></span><span class="tool-label">Скачать копию</span></button></div>
+<input id="image-file" type="file" accept="image/*" hidden></nav>
+<div class="zoom" id="zoom-controls" aria-label="Масштаб доски" hidden><button id="zoom-out" aria-label="Уменьшить масштаб" title="Уменьшить масштаб">−</button><button id="zoom-reset" aria-label="Сбросить масштаб" title="Сбросить масштаб">100%</button><button id="zoom-in" aria-label="Увеличить масштаб" title="Увеличить масштаб">+</button></div>
 <dialog id="editor"><form id="editform"><h2 id="editor-title">Стикер</h2><label>Текст<textarea id="text" maxlength="5000" required></textarea></label><label>Цвет</label><div class="row" id="colors"></div><div class="row"><button class="primary">Сохранить</button><button type="button" id="cancel">Отмена</button></div><p id="error" role="status"></p></form></dialog>
 <dialog id="invite"><h2>Пригласить на доску</h2><p>Любой, у кого есть ссылка, сможет редактировать эту доску.</p><input id="shareurl" readonly aria-label="Ссылка на доску"><div class="row"><button id="copy">Скопировать</button><button id="close">Закрыть</button></div><p id="copystatus" role="status"></p></dialog><div id="notice" role="status"></div>
 <script>
@@ -41,7 +100,7 @@ const $=id=>document.getElementById(id),colors=['yellow','pink','blue','green','
 function notice(text){$('notice').textContent=text;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('notice').textContent='',6000)}
 async function api(path,options,endpoint='/api/boards'){const r=await fetch('https://obshchaya-doska-maks.edgybramble.chatgpt.site'+endpoint+path,options);let j;try{j=await r.json()}catch{throw Error('Не удалось связаться с сервером')}if(!r.ok){const err=Error(j.error||'Ошибка сервера');err.status=r.status;throw err}return j}
 function status(t){$('status').textContent=t}
-function setMode(m){mode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));$('surface').style.cursor=m==='hand'?'grab':['pen','pencil','eraser'].includes(m)?'crosshair':'default'}
+function setMode(m){mode=m;document.querySelectorAll('[data-mode]').forEach(b=>{const active=b.dataset.mode===m;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});$('surface').style.cursor=m==='hand'?'grab':['pen','pencil','eraser'].includes(m)?'crosshair':'default'}
 function pick(id){selected=id;$('edit').disabled=!['note','text'].includes(objects.get(id)?.data.type);$('del').disabled=!id;paint()}
 function paint(){const layer=$('objects'),svg=$('drawing');layer.replaceChildren();svg.replaceChildren();for(const [id,o] of objects){if(o.deleted)continue;const d=o.data;if(d.type==='stroke'){const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',strokePath(d.points,d.x,d.y));p.setAttribute('stroke',({yellow:'#c69316',pink:'#cf4b7d',blue:'#315ae7',green:'#368257',ink:'#25364b'})[d.color]);p.setAttribute('stroke-width',selected===id?'7':String(strokeWidths[d.tool]||4));p.dataset.id=id;svg.append(p);continue}const el=document.createElement('div');el.className='obj '+d.type+' '+d.color+(selected===id?' selected':'');el.style.left=d.x+'px';el.style.top=d.y+'px';if(d.type==='image'){
   const img=document.createElement('img');
@@ -87,7 +146,7 @@ function changeZoom(next,event){
  $('extent').style.width=5000*zoom+'px';
  $('extent').style.height=4000*zoom+'px';
  $('world').style.transform='scale('+zoom+')';
- surface.style.backgroundSize=22*zoom+'px '+22*zoom+'px';
+ surface.style.backgroundSize=32*zoom+'px '+32*zoom+'px';
  surface.scrollLeft=worldX*zoom-x;
  surface.scrollTop=worldY*zoom-y;
  $('zoom-reset').textContent=Math.round(zoom*100)+'%';
@@ -183,7 +242,7 @@ document.addEventListener('paste',event=>{
 function openEdit(o){draft=structuredClone(o);$('text').value=o.data.text;drawColors();$('error').textContent='';$('editor-title').textContent=o.data.type==='note'?'Стикер':'Текст';$('editor').showModal();$('text').focus()}
 function drawColors(){$('colors').replaceChildren();for(const c of colors){const b=document.createElement('button');b.type='button';b.textContent=({yellow:'Жёлтый',pink:'Розовый',blue:'Голубой',green:'Зелёный',ink:'Серый'})[c];b.className=c;b.setAttribute('aria-pressed',draft.data.color===c);b.onclick=()=>{draft.data.color=c;drawColors()};$('colors').append(b)}}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-$('color').onclick=()=>{color=colors[(colors.indexOf(color)+1)%colors.length];$('color').className=color};
+$('color').onclick=()=>{color=colors[(colors.indexOf(color)+1)%colors.length];$('color').dataset.color=color};
 async function create(){try{status('Создаём…');const j=await api('',{method:'POST'});location.href='?board='+j.id}catch(e){notice(e.message);status('Не удалось создать')}}
 $('start').onclick=create;
 $('new').onclick=()=>{if(accountKey)location.href='?view=mine';else create();};
@@ -318,5 +377,5 @@ $('cancel').onclick=()=>$('editor').close();
 $('share').onclick=()=>{$('shareurl').value=location.href;$('invite').showModal()};$('close').onclick=()=>$('invite').close();$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copystatus').textContent='Ссылка скопирована'}catch{$('shareurl').select();$('copystatus').textContent='Скопируй выделенную ссылку'}};
 $('export').onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({board,objects:[...objects.values()].filter(o=>!o.deleted)},null,2)],{type:'application/json'}));a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 if(dashboard){board=null;$('welcome').hidden=true;$('dashboard').hidden=false;showDashboard();}
-else if(board&&/^[a-f0-9-]{36}$/.test(board)){$('welcome').hidden=true;$('surface').hidden=false;$('tools').hidden=false;$('share').hidden=false;try{localStorage.setItem('last-board',board)}catch{}refresh();setInterval(refresh,1200)}else{board=null;try{const id=localStorage.getItem('last-board');if(/^[a-f0-9-]{36}$/.test(id)){const a=document.createElement('a');a.href='?board='+id;a.textContent='Вернуться к последней доске';$('recent').append(a)}}catch{}}
+else if(board&&/^[a-f0-9-]{36}$/.test(board)){$('welcome').hidden=true;$('surface').hidden=false;$('tools').hidden=false;$('zoom-controls').hidden=false;$('share').hidden=false;try{localStorage.setItem('last-board',board)}catch{}refresh();setInterval(refresh,1200)}else{board=null;try{const id=localStorage.getItem('last-board');if(/^[a-f0-9-]{36}$/.test(id)){const a=document.createElement('a');a.href='?board='+id;a.textContent='Вернуться к последней доске';$('recent').append(a)}}catch{}}
 </script></html>
